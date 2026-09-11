@@ -253,6 +253,20 @@
     font-size: 12px; font-weight: bold; color: #444;
     margin: 14px 0 4px; padding-bottom: 4px; border-bottom: 1px solid #eee;
   }
+  /* 2026-09-11追加: 単一選択パネル「数量情報」見出しの右側に「+一覧表」（未転記分を全て追加）
+     ボタンを配置するための見出し用レイアウト（詳細はshowProperties()内のisArchicadQty分岐参照）。
+     旧buildPanelMergeButtons()の.btn.btn-secondaryは白背景(#fff)のパネル内で白文字
+     （background: rgba(255,255,255,0.15); color: white;、本来ヘッダーの濃色背景前提）になり
+     文字が実質見えず絵文字アイコンだけに見えていた不具合があったため、独自の配色で新規定義する。 */
+  .pset-title-with-action {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .pset-title-with-action .panel-transfer-btn {
+    flex: 0 0 auto; font-size: 11px; font-weight: normal; color: #2a5a9c;
+    background: #eef4ff; border: 1px solid #cfe0ff; border-radius: 3px;
+    padding: 2px 8px; cursor: pointer; white-space: nowrap;
+  }
+  .pset-title-with-action .panel-transfer-btn:hover { background: #dde8ff; }
 
   table.prop-table td.qty-pane-unit { width: 28px; color: #999; white-space: nowrap; }
   table.prop-table td.qty-pane-copy { width: 24px; text-align: center; }
@@ -4453,8 +4467,18 @@ async function showProperties(modelID, expressId) {
       // （タスクA詳細化、坂東さん指示②。転記ボタンを埋め込んだ行のdata-*属性はこのクラスが
       // 無いと一括転記ボタンから拾われない）。
       const tableCls = isArchicadQty ? 'prop-table panel-merge-table' : 'prop-table';
-      psetsHtml += `<div class="pset-title">${escHtml(displayPsetName(psetName))}</div><table class="${tableCls}">${finalPsetRows}</table>`;
-      if (isArchicadQty) psetsHtml += buildPanelMergeButtons();
+      // 2026-09-11変更（坂東さん指示、単一選択パネル限定）: 「📋 未転記をすべて一覧表へ転記」
+      // ボタン（旧buildPanelMergeButtons()、テーブル下部の独立した行）を、機能は変えずに
+      // 「数量情報」見出しの右側へ「+一覧表」という文字列ボタンとして移設した。クリック処理は
+      // 既存の#panelBodyクリックリスナー（.panel-transfer-btnへの委譲、transferAllPanelDescriptors()
+      // 呼び出し）をそのまま使うため、クラス名・挙動（未転記の全行を一覧表へ追加）は無変更。
+      // 複数選択パネル（showMultiSelectionSummary、buildPanelMergeButtons()呼び出し側）は
+      // 今回の指示対象外（坂東さんの説明は単一選択時の部材情報パネルのみを指している）のため無変更。
+      const titleHtml = isArchicadQty
+        ? `<div class="pset-title pset-title-with-action"><span>${escHtml(displayPsetName(psetName))}</span>`
+          + `<button type="button" class="panel-transfer-btn" title="まだ一覧表へ転記していない数量をすべて追加">+一覧表</button></div>`
+        : `<div class="pset-title">${escHtml(displayPsetName(psetName))}</div>`;
+      psetsHtml += `${titleHtml}<table class="${tableCls}">${finalPsetRows}</table>`;
     }
   }
   // ArchiCADProperties・RIKCAD_PSETの中身を「RIKCAD作図情報」1セクションに統合して出力
